@@ -15,7 +15,7 @@ load_dotenv()
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="AI Visualization Assistant",
+    page_title="PM ChatGPT Enterprise Analytics",
     page_icon="🤖",
     layout="centered"
 )
