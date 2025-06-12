@@ -23,7 +23,7 @@ st.set_page_config(
 # --- App Title and Description ---
 st.title("🤖 PM ChatGPT Enterprise Analytics")
 st.write(
-    "This app uses the Gemini API to create visualizations on the fly. "
+    "This app (hello) uses the Gemini API to create visualizations on the fly. "
     "Enter a request in plain English, and the AI will generate a Plotly chart."
 )
 st.write("---")
