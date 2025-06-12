@@ -8,6 +8,10 @@ import pandas as pd
 import plotly.express as px
 import google.generativeai as genai
 import io
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -17,7 +21,7 @@ st.set_page_config(
 )
 
 # --- App Title and Description ---
-st.title("🤖 AI Visualization Assistant")
+st.title("🤖 PM ChatGPT Enterprise Analytics")
 st.write(
     "This app uses the Gemini API to create visualizations on the fly. "
     "Enter a request in plain English, and the AI will generate a Plotly chart."
@@ -56,7 +60,7 @@ df = get_dummy_data()
 
 
 # --- Gemini API Configuration ---
-gemini_api_key = "AIzaSyBJ3dGBoOhLYjPomlmuK3qWRXO-GjtQlFc"
+gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 
 
