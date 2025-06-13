@@ -8,7 +8,7 @@ def get_visualization_code(user_request, df_for_prompt, api_key):
     """
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
     except Exception as e:
         # Let the caller handle UI feedback
         raise ValueError(f"Error configuring the API. Please check your key. Details: {e}")
