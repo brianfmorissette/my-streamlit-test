@@ -99,6 +99,19 @@ st.sidebar.file_uploader(
     on_change=handle_file_upload # Set the callback function
 )
 
+# --- NEW: Show Processed Dates in Sidebar ---
+with st.sidebar.expander("Processed Report Dates", expanded=True):
+    if not st.session_state.users_df.empty:
+        # Get unique dates, sort them with the newest first
+        processed_dates = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.unique()
+        processed_dates = sorted(processed_dates, reverse=True)
+        
+        for date in processed_dates:
+            st.write(date.strftime('%Y-%m-%d'))
+    else:
+        st.write("No reports have been uploaded yet.")
+
+
 st.sidebar.header("Filters")
 pm_only = st.sidebar.checkbox("Show PM only")
 
@@ -118,11 +131,13 @@ else:
 # Gemini API Configuration
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
+
+
 # Main App Layout
 left_col, right_col = st.columns(2)
 
 with left_col:
-    st.markdown("### Explore the dataframes")
+    st.header("Explore the dataframes")
     tab1, tab2, tab3 = st.tabs(["Users", "Models", "Tools"])
     with tab1:
         st.dataframe(users_df_view)
