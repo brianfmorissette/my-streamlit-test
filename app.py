@@ -9,20 +9,20 @@ import plotly.express as px
 import os
 from dotenv import load_dotenv
 
-from data import get_dummy_data
+from data import load_master_dataframes, save_master_dataframes, process_uploaded_file
 from gemini_client import get_visualization_code
 
 load_dotenv()
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="AI Visualization Assistant",
-    page_icon="🤖",
+    page_title="PM ChatGPT Enterprise Analytics",
+    page_icon="company_logo.png",
     layout="centered"
 )
 
 # --- App Title and Description ---
-st.title("🤖 PM ChatGPT Enterprise Analytics")
+st.title("PM ChatGPT Enterprise Analytics")
 st.write(
     "This app uses the Gemini API to create visualizations on the fly. "
     "Enter a request in plain English, and the AI will generate a Plotly chart."
@@ -30,14 +30,36 @@ st.write(
 st.write("---")
 
 # --- Load Data ---
-df = get_dummy_data()
+# Load existing master dataframes
+users_df, models_df, tools_df = load_master_dataframes()
+
+# Sidebar for file upload
+st.sidebar.header("Upload new file")
+uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=['csv'])
+
+if uploaded_file is not None:
+    try:
+        df = pd.read_csv(uploaded_file)
+        new_users, new_models, new_tools = process_uploaded_file(df, uploaded_file.name)
+        # Append new data to master dataframes
+        users_df = pd.concat([users_df, new_users], ignore_index=True)
+        models_df = pd.concat([models_df, new_models], ignore_index=True)
+        tools_df = pd.concat([tools_df, new_tools], ignore_index=True)
+        # Save updated masters
+        save_master_dataframes(users_df, models_df, tools_df)
+        st.success("File processed and data added to master dataframes!")
+    except Exception as e:
+        st.error(f"Error processing file: {e}")
+
+
+
 
 # --- Gemini API Configuration ---
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 # --- Main App ---
 st.markdown("### Here is the sample DataFrame we're working with:")
-st.dataframe(df)
+st.dataframe(users_df)
 st.write("---")
 
 st.header("Create a Custom Visualization")
@@ -56,7 +78,7 @@ if st.button("Generate Visualization"):
             try:
                 generated_code = get_visualization_code(
                     user_request=user_request,
-                    df_for_prompt=df,
+                    df_for_prompt=users_df,
                     api_key=gemini_api_key
                 )
 
@@ -73,7 +95,7 @@ if st.button("Generate Visualization"):
                             code_to_execute = code_to_execute[:-len("```")].strip()
 
                         # Execute the generated code in a controlled scope
-                        local_scope = {"df": df, "px": px, "pd": pd}
+                        local_scope = {"df": users_df, "px": px, "pd": pd}
                         exec(code_to_execute, {}, local_scope)
                         fig = local_scope.get("fig")
 
