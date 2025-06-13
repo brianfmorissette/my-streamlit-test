@@ -30,6 +30,7 @@ st.write(
 st.write("---")
 
 # --- Load Data ---
+
 # Load existing master dataframes
 users_df, models_df, tools_df = load_master_dataframes()
 
@@ -58,11 +59,28 @@ if uploaded_file is not None:
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 # --- Main App ---
-st.markdown("### Here is the sample DataFrame we're working with:")
-st.dataframe(users_df)
+st.markdown("### Explore the dataframes")
+tab1, tab2, tab3 = st.tabs(["Users", "Models", "Tools"])
+with tab1:
+    st.dataframe(users_df)
+with tab2:
+    st.dataframe(models_df)
+with tab3:
+    st.dataframe(tools_df)
 st.write("---")
 
+
 st.header("Create a Custom Visualization")
+
+dataframes = {"Users": users_df, "Models": models_df, "Tools": tools_df}
+selected_df_name = st.radio(
+    "Choose a dataframe to query:",
+    options=list(dataframes.keys()),
+    horizontal=True,
+)
+df = dataframes[selected_df_name]
+
+
 user_request = st.text_area(
     "Enter your visualization request:",
     "Bar chart of total messages per user"
@@ -78,7 +96,7 @@ if st.button("Generate Visualization"):
             try:
                 generated_code = get_visualization_code(
                     user_request=user_request,
-                    df_for_prompt=users_df,
+                    df_for_prompt=df,
                     api_key=gemini_api_key
                 )
 
@@ -95,7 +113,7 @@ if st.button("Generate Visualization"):
                             code_to_execute = code_to_execute[:-len("```")].strip()
 
                         # Execute the generated code in a controlled scope
-                        local_scope = {"df": users_df, "px": px, "pd": pd}
+                        local_scope = {"df": df, "px": px, "pd": pd}
                         exec(code_to_execute, {}, local_scope)
                         fig = local_scope.get("fig")
 
