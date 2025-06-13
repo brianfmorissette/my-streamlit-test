@@ -24,7 +24,7 @@ st.set_page_config(
 # --- App Title and Description ---
 st.title("PM ChatGPT Enterprise Analytics")
 st.write(
-    "This app uses the Gemini API to create visualizations on the fly. "
+    "This app uses the Gemini API to create custom visualizations on the fly. "
     "Enter a request in plain English, and the AI will generate a Plotly chart."
 )
 st.write("---")
@@ -34,15 +34,23 @@ st.write("---")
 # Load existing master dataframes
 users_df, models_df, tools_df = load_master_dataframes()
 
+# Load PM emails from CSV
+try:
+    pm_emails_df = pd.read_csv("pm_emails.csv")
+    pm_emails = pm_emails_df["email"].tolist()
+except FileNotFoundError:
+    st.error("pm_emails.csv not found. Please create it in the root directory.")
+    pm_emails = []
+
 # Sidebar for file upload
-st.sidebar.header("Upload new file")
+st.sidebar.header("Upload New Weekly Data")
 uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=['csv'])
 
 if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
         new_users, new_models, new_tools = process_uploaded_file(df, uploaded_file.name)
-        # Append new data to master dataframes
+        # Append new data to master dataframes``
         users_df = pd.concat([users_df, new_users], ignore_index=True)
         models_df = pd.concat([models_df, new_models], ignore_index=True)
         tools_df = pd.concat([tools_df, new_tools], ignore_index=True)
@@ -52,8 +60,19 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Error processing file: {e}")
 
+# --- Sidebar Filters ---
+st.sidebar.header("Filters")
+pm_only = st.sidebar.checkbox("Show PM only")
 
-
+# Create views of the dataframes based on the filter
+if pm_only:
+    users_df_view = users_df[users_df["email"].isin(pm_emails)]
+    models_df_view = models_df[models_df["email"].isin(pm_emails)]
+    tools_df_view = tools_df[tools_df["email"].isin(pm_emails)]
+else:
+    users_df_view = users_df
+    models_df_view = models_df
+    tools_df_view = tools_df
 
 # --- Gemini API Configuration ---
 gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -62,17 +81,17 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 st.markdown("### Explore the dataframes")
 tab1, tab2, tab3 = st.tabs(["Users", "Models", "Tools"])
 with tab1:
-    st.dataframe(users_df)
+    st.dataframe(users_df_view)
 with tab2:
-    st.dataframe(models_df)
+    st.dataframe(models_df_view)
 with tab3:
-    st.dataframe(tools_df)
+    st.dataframe(tools_df_view)
 st.write("---")
 
 
 st.header("Create a Custom Visualization")
 
-dataframes = {"Users": users_df, "Models": models_df, "Tools": tools_df}
+dataframes = {"Users": users_df_view, "Models": models_df_view, "Tools": tools_df_view}
 selected_df_name = st.radio(
     "Choose a dataframe to query:",
     options=list(dataframes.keys()),
@@ -92,7 +111,7 @@ if st.button("Generate Visualization"):
     elif not gemini_api_key:
         st.error("GEMINI_API_KEY not found. Please set it in your .env file.")
     else:
-        with st.spinner("🤖 AI is thinking..."):
+        with st.spinner("Generating visualization..."):
             try:
                 generated_code = get_visualization_code(
                     user_request=user_request,
@@ -129,8 +148,3 @@ if st.button("Generate Visualization"):
             except (ValueError, RuntimeError) as e:
                 st.error(str(e))
 
-# --- Footer ---
-st.sidebar.markdown("---")
-st.sidebar.info(
-    "This is a demo application. The data is randomly generated and not real."
-)

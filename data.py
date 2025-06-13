@@ -6,11 +6,11 @@ from datetime import datetime
 # Define the columns for each of the three master DataFrames
 # This ensures consistency across the application.
 USER_COLS = [
-    'period_start', 'email', 'name', 'user_status', 'is_active', 'messages', 'gpts_messaged', 'tools_messaged', 
+    'week_start', 'email', 'name', 'user_status', 'is_active', 'messages', 'gpts_messaged', 'tools_messaged', 
     'projects_created', 'last_day_active'
 ]
-MODEL_COLS = ['period_start', 'email', 'name', 'model', 'messages']
-TOOL_COLS = ['period_start', 'email', 'name', 'tool', 'messages']
+MODEL_COLS = ['week_start', 'email', 'name', 'model', 'messages']
+TOOL_COLS = ['week_start', 'email', 'name', 'tool', 'messages']
 
 
 def initialize_master_dataframes():
@@ -27,11 +27,11 @@ def initialize_master_dataframes():
     
     # Set data types for more efficient storage and operations
     users_df = users_df.astype({
-        'period_start': 'str', 'email': 'str', 'name': 'str', 'user_status': 'category', 
+        'week_start': 'str', 'email': 'str', 'name': 'str', 'user_status': 'category', 
         'is_active': 'bool', 'messages': 'int', 'gpts_messaged': 'int', 'tools_messaged': 'int', 'projects_created': 'int'
     })
-    models_df = models_df.astype({'period_start': 'str', 'email': 'str', 'name': 'str', 'model': 'str', 'messages': 'int'})
-    tools_df = tools_df.astype({'period_start': 'str', 'email': 'str', 'name': 'str', 'tool': 'str', 'messages': 'int'})
+    models_df = models_df.astype({'week_start': 'str', 'email': 'str', 'name': 'str', 'model': 'str', 'messages': 'int'})
+    tools_df = tools_df.astype({'week_start': 'str', 'email': 'str', 'name': 'str', 'tool': 'str', 'messages': 'int'})
     
     return users_df, models_df, tools_df
 
@@ -114,9 +114,10 @@ def process_uploaded_file(df, filename):
         tuple: A tuple containing the three processed (users, models, tools) DataFrames.
     """
     df.dropna(subset=['email'], inplace=True)
+    df.rename(columns={'period_start': 'week_start'}, inplace=True)
 
     # --- 1. Date and Type Conversions ---
-    date_cols = ['period_start', 'last_day_active']
+    date_cols = ['week_start', 'last_day_active']
     for col in date_cols:
         df[col] = pd.to_datetime(df[col], errors='coerce')
 
@@ -127,11 +128,13 @@ def process_uploaded_file(df, filename):
     df['is_active'] = df['is_active'].astype('bool')
     df['user_status'] = df['user_status'].astype('category')
 
+    
+
     # --- 2. Create the User Details DataFrame ---
     users_df = df.reindex(columns=USER_COLS).copy()
 
     # --- 3. Create the Model and Tool Usage DataFrames ---
-    id_vars = ['period_start', 'email', 'name']
+    id_vars = ['week_start', 'email', 'name']
     models_df = _flatten_data(df, id_vars, 'model_to_messages', ['model', 'messages'])
     tools_df = _flatten_data(df, id_vars, 'tool_to_messages', ['tool', 'messages'])
     
