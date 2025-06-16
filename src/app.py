@@ -6,13 +6,13 @@ from ui.main_page import show_main_page
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="PM ChatGPT Enterprise Analytics",
+    page_title="Flagship Pioneering ChatGPT Usage Analytics",
     page_icon="assets/company_logo.png",
     layout="wide"
 )
 
 # --- App Title and Description ---
-st.title("PM ChatGPT Enterprise Analytics")
+st.title("Flagship Pioneering ChatGPT Usage Analytics")
 st.write(
     "This app creates custom visualizations on the fly. "
     "Enter a request in plain English, and the AI will generate a Plotly chart."
@@ -40,17 +40,29 @@ except FileNotFoundError:
     pm_emails = []
 
 # --- Render UI and Apply Filters ---
-pm_only = show_sidebar()
+pm_only, start_date, end_date = show_sidebar()
 
-# Create filtered views of the dataframes based on the sidebar filter.
+# Create initial filtered views based on the pm_only filter.
 if pm_only:
     users_df_view = st.session_state.users_df[st.session_state.users_df["email"].isin(pm_emails)]
     models_df_view = st.session_state.models_df[st.session_state.models_df["email"].isin(pm_emails)]
     tools_df_view = st.session_state.tools_df[st.session_state.tools_df["email"].isin(pm_emails)]
 else:
-    users_df_view = st.session_state.users_df
-    models_df_view = st.session_state.models_df
-    tools_df_view = st.session_state.tools_df
+    users_df_view = st.session_state.users_df.copy()
+    models_df_view = st.session_state.models_df.copy()
+    tools_df_view = st.session_state.tools_df.copy()
+
+# Apply the date range filter if it's available
+if start_date and end_date:
+    for df_view in [users_df_view, models_df_view, tools_df_view]:
+        if not df_view.empty:
+            df_view['week_start'] = pd.to_datetime(df_view['week_start']).dt.date
+            df_view.query("@start_date <= week_start <= @end_date", inplace=True)
+
+# Sort all dataframes by date in descending order before displaying
+users_df_view = users_df_view.sort_values(by='week_start', ascending=False)
+models_df_view = models_df_view.sort_values(by='week_start', ascending=False)
+tools_df_view = tools_df_view.sort_values(by='week_start', ascending=False)
 
 # Render the main page content
 show_main_page(users_df_view, models_df_view, tools_df_view)

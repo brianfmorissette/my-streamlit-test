@@ -44,7 +44,7 @@ def handle_file_upload():
         st.sidebar.error(f"Error processing file: {e}")
 
 def show_sidebar():
-    """Renders the sidebar components and returns the state of the pm_only filter."""
+    """Renders the sidebar components and returns the filter states."""
     st.sidebar.header("Upload New Weekly Data")
     st.sidebar.file_uploader(
         "Upload CSV file", 
@@ -53,7 +53,7 @@ def show_sidebar():
         on_change=handle_file_upload
     )
 
-    with st.sidebar.expander("Processed Report Dates", expanded=True):
+    with st.sidebar.expander("Processed Report Dates", expanded=False):
         if not st.session_state.users_df.empty:
             processed_dates = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.unique()
             processed_dates = sorted(processed_dates, reverse=True)
@@ -64,5 +64,19 @@ def show_sidebar():
             st.write("No reports have been uploaded yet.")
 
     st.sidebar.header("Filters")
+    
+    # --- Time Filter ---
+    start_date, end_date = None, None
+    if not st.session_state.users_df.empty:
+        st.sidebar.subheader("Date Range")
+        min_date = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.min()
+        max_date = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.max()
+
+        start_date = st.sidebar.date_input("From", value=min_date, min_value=min_date, max_value=max_date)
+        end_date = st.sidebar.date_input("To", value=max_date, min_value=min_date, max_value=max_date)
+
+    # --- PM Filter ---
+    st.sidebar.subheader("User Type")
     pm_only = st.sidebar.checkbox("Show PM only")
-    return pm_only 
+    
+    return pm_only, start_date, end_date 

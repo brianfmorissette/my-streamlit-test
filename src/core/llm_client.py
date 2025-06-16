@@ -14,7 +14,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 def get_visualization_code(
     user_request, 
     df_for_prompt, 
-    model_provider
+    model
 ):
     """
     Calls the selected LLM API to generate Python code for a visualization.
@@ -53,7 +53,7 @@ def get_visualization_code(
     """
 
     # --- API Call Logic ---
-    if model_provider == "Gemini":
+    if model == "Gemini 1.5 Flash":
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY not found. Please set it in your .env file.")
         try:
@@ -64,7 +64,7 @@ def get_visualization_code(
         except Exception as e:
             raise RuntimeError(f"An error occurred while calling the Gemini API: {e}")
 
-    elif model_provider == "OpenAI":
+    elif model == "ChatGPT 4o":
         if not OPENAI_API_KEY:
             raise ValueError("OPENAI_API_KEY not found. Please set it in your .env file.")
         try:
