@@ -7,7 +7,7 @@ from ui.main_page import show_main_page
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Flagship Pioneering ChatGPT Usage Analytics",
-    page_icon="assets/company_logo.png",
+    page_icon="assets/flagship_logo.png",
     layout="wide"
 )
 
