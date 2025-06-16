@@ -142,11 +142,11 @@ def show_main_page(users_df_view, models_df_view, tools_df_view):
                     st.plotly_chart(fig)
 
                     # Refinement section: Allow users to provide feedback
-                    st.write("Does this look right? Provide feedback to refine the chart.")
+                    st.write("Provide feedback to refine the chart.")
                     feedback = st.text_area(
                         "Your feedback:", 
                         key="feedback_box",
-                        placeholder="e.g., 'Change the chart to a bar chart', 'Use a different color scheme'"
+                        placeholder="e.g., 'Change the chart to a bar chart', 'Use a different color scheme', 'Use names instead of emails'"
                     )
 
                     # Regenerate button with feedback

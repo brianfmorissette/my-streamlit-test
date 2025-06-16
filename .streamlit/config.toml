@@ -1,0 +1,8 @@
+[server]
+headless = true
+port = 8501
+enableCORS = false
+
+[general]
+# Specify the main app script here
+main = "src/app.py"
