@@ -27,11 +27,12 @@ def initialize_master_dataframes():
     
     # Set data types for more efficient storage and operations
     users_df = users_df.astype({
-        'week_start': 'str', 'email': 'str', 'name': 'str', 'user_status': 'category', 
-        'is_active': 'bool', 'messages': 'int', 'gpts_messaged': 'int', 'tools_messaged': 'int', 'projects_created': 'int'
+        'week_start': 'datetime64[ns]', 'email': 'str', 'name': 'str', 'user_status': 'category', 
+        'is_active': 'bool', 'messages': 'int', 'gpts_messaged': 'int', 'tools_messaged': 'int', 
+        'projects_created': 'int', 'last_day_active': 'datetime64[ns]'
     })
-    models_df = models_df.astype({'week_start': 'str', 'email': 'str', 'name': 'str', 'model': 'str', 'messages': 'int'})
-    tools_df = tools_df.astype({'week_start': 'str', 'email': 'str', 'name': 'str', 'tool': 'str', 'messages': 'int'})
+    models_df = models_df.astype({'week_start': 'datetime64[ns]', 'email': 'str', 'name': 'str', 'model': 'str', 'messages': 'int'})
+    tools_df = tools_df.astype({'week_start': 'datetime64[ns]', 'email': 'str', 'name': 'str', 'tool': 'str', 'messages': 'int'})
     
     return users_df, models_df, tools_df
 

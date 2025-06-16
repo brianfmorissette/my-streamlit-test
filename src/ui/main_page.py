@@ -40,17 +40,10 @@ def show_main_page(users_df_view, models_df_view, tools_df_view):
                 key="model"
             )
             
-
-        
-
-
-        # TODO: Add more example prompts for each dataframe type
-        # TODO: Add validation for user input against common patterns
-        # TODO: Add prompt templates to help guide users
         placeholder_prompts = {
-            "Users": "e.g. 'Bar chart of total messages per user, top 10 only', 'Pie chart of user_status'",
-            "Models": "e.g. 'Show messages per model for a specific user', 'Top 5 models by total messages'",
-            "Tools": "e.g. 'Which tools are most used?', 'Bar chart of tool usage for a specific user'"
+            "Users": "e.g. 'Average messages per user'",
+            "Models": "e.g. 'Stacked bar chart of model usage by week', 'Pie chart of most popular models', 'Trend of o3 usage'", 
+            "Tools": "e.g. 'Stacked bar chart of tool usage by week', 'Pie chart of most popular tools', 'Trend of Data Analysis usage'"
         }
 
         user_request = st.text_area(

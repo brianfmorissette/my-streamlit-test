@@ -21,7 +21,6 @@ st.write("---")
 
 # --- Initialize Session State ---
 if 'initialized' not in st.session_state:
-    st.toast("Loading master data...")
     users_df, models_df, tools_df = load_master_dataframes()
     
     st.session_state.users_df = users_df
@@ -29,24 +28,20 @@ if 'initialized' not in st.session_state:
     st.session_state.tools_df = tools_df
     
     st.session_state.initialized = True
-    st.toast("Data loaded successfully!", icon="✅")
 
 # --- Load PM Emails ---
-try:
-    pm_emails_df = pd.read_csv("pm_emails.csv")
-    pm_emails = pm_emails_df["email"].tolist()
-except FileNotFoundError:
-    st.error("pm_emails.csv not found. Please create it in the root directory.")
-    pm_emails = []
+pm_emails_df = pd.read_csv("pm_emails.csv")
+pm_emails = pm_emails_df["email"].tolist()
+
 
 # --- Render UI and Apply Filters ---
 pm_only, start_date, end_date = show_sidebar()
 
 # Create initial filtered views based on the pm_only filter.
 if pm_only:
-    users_df_view = st.session_state.users_df[st.session_state.users_df["email"].isin(pm_emails)]
-    models_df_view = st.session_state.models_df[st.session_state.models_df["email"].isin(pm_emails)]
-    tools_df_view = st.session_state.tools_df[st.session_state.tools_df["email"].isin(pm_emails)]
+    users_df_view = st.session_state.users_df[st.session_state.users_df["email"].isin(pm_emails)].copy()
+    models_df_view = st.session_state.models_df[st.session_state.models_df["email"].isin(pm_emails)].copy()
+    tools_df_view = st.session_state.tools_df[st.session_state.tools_df["email"].isin(pm_emails)].copy()
 else:
     users_df_view = st.session_state.users_df.copy()
     models_df_view = st.session_state.models_df.copy()

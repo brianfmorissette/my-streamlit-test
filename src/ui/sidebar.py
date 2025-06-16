@@ -3,6 +3,31 @@ import pandas as pd
 from datetime import datetime
 from core.data import save_master_dataframes, process_uploaded_file
 
+def handle_date_deletion(date_to_delete):
+    """
+    Deletes all data entries for a specific date from the master dataframes.
+    """
+    try:
+        # Convert the date to a datetime object to ensure correct filtering
+        date_to_delete = pd.to_datetime(date_to_delete)
+
+        # Filter out the data for the given date
+        st.session_state.users_df = st.session_state.users_df[pd.to_datetime(st.session_state.users_df['week_start']) != date_to_delete]
+        st.session_state.models_df = st.session_state.models_df[pd.to_datetime(st.session_state.models_df['week_start']) != date_to_delete]
+        st.session_state.tools_df = st.session_state.tools_df[pd.to_datetime(st.session_state.tools_df['week_start']) != date_to_delete]
+
+        # Save the updated dataframes
+        save_master_dataframes(
+            st.session_state.users_df,
+            st.session_state.models_df,
+            st.session_state.tools_df
+        )
+        st.toast(f"Successfully deleted all data for {date_to_delete.date()}.", icon="✅")
+        st.rerun()  # Rerun the app to reflect the changes immediately
+        
+    except Exception as e:
+        st.sidebar.error(f"Error deleting data: {e}")
+
 def handle_file_upload():
     """
     This function is called when a new file is uploaded.
@@ -45,7 +70,25 @@ def handle_file_upload():
 
 def show_sidebar():
     """Renders the sidebar components and returns the filter states."""
-    st.sidebar.header("Upload New Weekly Data")
+    st.sidebar.header("Filters")
+
+    # --- PM Filter ---
+    st.sidebar.subheader("User Type")
+    pm_only = st.sidebar.checkbox("Show PM only")
+    
+    # --- Time Filter ---
+    start_date, end_date = None, None
+    if not st.session_state.users_df.empty:
+        st.sidebar.subheader("Date Range")
+        min_date = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.min()
+        max_date = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.max()
+
+        start_date = st.sidebar.date_input("From", value=min_date, min_value=min_date, max_value=max_date)
+        end_date = st.sidebar.date_input("To", value=max_date, min_value=min_date, max_value=max_date)
+
+    st.sidebar.divider()
+
+    st.sidebar.header("Upload Weekly Data")
     st.sidebar.file_uploader(
         "Upload CSV file", 
         type=['csv'], 
@@ -59,24 +102,18 @@ def show_sidebar():
             processed_dates = sorted(processed_dates, reverse=True)
             
             for date in processed_dates:
-                st.write(date.strftime('%Y-%m-%d'))
+                col1, col2 = st.columns([0.8, 0.2])
+                with col1:
+                    st.write(date.strftime('%Y-%m-%d'))
+                with col2:
+                    if st.button("🗑️", key=f"delete_{date}"):
+                        handle_date_deletion(date)
         else:
             st.write("No reports have been uploaded yet.")
 
-    st.sidebar.header("Filters")
     
-    # --- Time Filter ---
-    start_date, end_date = None, None
-    if not st.session_state.users_df.empty:
-        st.sidebar.subheader("Date Range")
-        min_date = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.min()
-        max_date = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.max()
+    
 
-        start_date = st.sidebar.date_input("From", value=min_date, min_value=min_date, max_value=max_date)
-        end_date = st.sidebar.date_input("To", value=max_date, min_value=min_date, max_value=max_date)
-
-    # --- PM Filter ---
-    st.sidebar.subheader("User Type")
-    pm_only = st.sidebar.checkbox("Show PM only")
+    
     
     return pm_only, start_date, end_date 
