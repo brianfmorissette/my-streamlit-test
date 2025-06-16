@@ -27,6 +27,8 @@ def get_visualization_code(
         df_for_prompt.info(buf=buffer)
         df_schema = buffer.getvalue()
     df_head = df_for_prompt.head().to_string()
+    df_tail = df_for_prompt.tail().to_string()
+    df_columns = df_for_prompt.columns.tolist()
 
     if previous_code and feedback:
         # This is a refinement request
@@ -43,6 +45,10 @@ def get_visualization_code(
         ```
         {df_head}
         ```
+        Tail:
+        ```
+        {df_tail}
+        ```
 
         Here is the original user request:
         "{user_request}"
@@ -57,16 +63,26 @@ def get_visualization_code(
 
         Your task is to generate ONLY the updated Python code that incorporates the user's feedback.
         Your response must be a raw string of Python code, without any markdown, code fences (```), or explanations.
+        
+        CRITICAL REQUIREMENTS TO PREVENT ERRORS:
         - The DataFrame is already in memory as `df`. Do not load any data.
+        - `pandas` is imported as `pd`.
         - The final chart object must be assigned to a variable named `fig`.
         - `plotly.express` is already imported as `px`. Do not import it again.
         - Do not include `st.plotly_chart(fig)`. The app will handle rendering.
+        - **ONLY use columns that exist in the DataFrame schema above. Available columns are: {df_columns}**
+        - **Handle missing data: Use df.dropna() or df.fillna() as appropriate**
+        - **For aggregations, use pandas groupby/agg methods before plotting**
+        - **Only use valid Plotly Express function parameters. Common valid parameters include: x, y, color, size, hover_data, title, labels**
+        - **For date columns, ensure proper datetime conversion: pd.to_datetime(df['col'], errors='coerce')**
+        - **Always include error handling for data operations**
+        - **If the request cannot be fulfilled with available data, create a simple fallback visualization**
         """
     else:
         # This is an initial request
         prompt = f"""
         You are an expert and meticulous Python data analyst specializing in Plotly Express.
-        Your goal is to generate clean, readable, and accurate Python code for visualizations based on user requests.
+        Your goal is to generate clean, readable, and ERROR-FREE Python code for visualizations based on user requests.
         You are working with a pandas DataFrame in memory named `df`.
 
         Here is the schema of the DataFrame:
@@ -79,16 +95,33 @@ def get_visualization_code(
         {df_head}
         ```
 
+        Here is the tail of the DataFrame:
+        ```
+        {df_tail}
+        ```
+
         The user has requested the following visualization:
         "{user_request}"
 
         Your task is to generate ONLY the Python code (using Plotly Express) to create the requested visualization.
         Your response must be a raw string of Python code, without any markdown, code fences (```), or explanations.
+        
+        CRITICAL REQUIREMENTS TO PREVENT ERRORS:
         - The code should be a single block.
         - The DataFrame is already in memory as `df`. Do not load any data.
+        - `pandas` is imported as `pd`.
         - The final chart object must be assigned to a variable named `fig`. For example: `fig = px.bar(...)`
         - `plotly.express` is already imported as `px`. Do not import it again.
         - Do not include `st.plotly_chart(fig)`. The app will handle rendering.
+        - **ONLY use columns that exist in the DataFrame schema above. Available columns are: {df_columns}**
+        - **Handle missing data: Use df.dropna() or df.fillna() as appropriate**
+        - **For aggregations, use pandas groupby/agg methods before plotting**
+        - **Only use valid Plotly Express function parameters. Common valid parameters include: x, y, color, size, hover_data, title, labels**
+        - **If a column has mixed data types, convert appropriately: pd.to_numeric(df['col'], errors='coerce')**
+        - **For date columns, ensure proper datetime conversion: pd.to_datetime(df['col'], errors='coerce')**
+        - **Always include error handling for data operations**
+        - **If the request cannot be fulfilled with available data, create a simple fallback visualization**
+        - **Wrap the main plotting logic in a try-except block and provide a fallback chart if errors occur**
         """
 
     # --- API Call Logic ---

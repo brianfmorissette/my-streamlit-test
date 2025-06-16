@@ -5,7 +5,3 @@ google-generativeai
 openai
 python-dotenv
 pyarrow
-langgraph
-langchain-core
-langchain-google-genai
-langchain-openai

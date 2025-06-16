@@ -41,8 +41,8 @@ def show_main_page(users_df_view, models_df_view, tools_df_view):
             )
             
         placeholder_prompts = {
-            "Users": "e.g. 'Average messages per user'",
-            "Models": "e.g. 'Stacked bar chart of model usage by week', 'Pie chart of most popular models', 'Trend of o3 usage'", 
+            "Users": "e.g. 'Top 10 most active users', 'Monthly usage patterns', 'Users who have created a project",
+            "Models": "e.g. 'Stacked bar chart of model usage by week', 'Pie chart of most popular models', 'Trend of o3 usage'",
             "Tools": "e.g. 'Stacked bar chart of tool usage by week', 'Pie chart of most popular tools', 'Trend of Data Analysis usage'"
         }
 
@@ -57,32 +57,50 @@ def show_main_page(users_df_view, models_df_view, tools_df_view):
             value=st.session_state.user_request
         )
 
-        if st.button("Generate Visualization"):
-            if not st.session_state.user_request:
-                st.warning("Please enter a request for the visualization.")
-            
-            elif model == "Gemini 1.5 Flash" and not GEMINI_API_KEY:
-                st.error("GEMINI_API_KEY not found. Please set it in your .env file.")
-            elif model == "ChatGPT 4o" and not OPENAI_API_KEY:
-                st.error("OPENAI_API_KEY not found. Please set it in your .env file.")
+        col_gen, col_clear = st.columns([3, 1])
 
-            else:
-                with st.spinner(f"Generating visualization with {model}..."):
-                    try:
-                        st.session_state.generated_code = get_visualization_code(
-                            user_request=st.session_state.user_request,
-                            df_for_prompt=df,
-                            model=model,
-                        )
-                        st.session_state.feedback = "" # Clear previous feedback
-                    except Exception as e:
-                        st.error(str(e))
-                        st.session_state.generated_code = None
-        
+        with col_gen:
+            if st.button("Generate Visualization", use_container_width=True):
+                if not st.session_state.user_request or st.session_state.user_request == placeholder_prompts.get(selected_df_name, ""):
+                    st.warning("Please enter a request for the visualization.")
+                
+                elif model == "Gemini 1.5 Flash" and not GEMINI_API_KEY:
+                    st.error("GEMINI_API_KEY not found. Please set it in your .env file.")
+                elif model == "ChatGPT 4o" and not OPENAI_API_KEY:
+                    st.error("OPENAI_API_KEY not found. Please set it in your .env file.")
+
+                else:
+                    with st.spinner(f"Generating visualization with {model}..."):
+                        try:
+                            st.session_state.generated_code = get_visualization_code(
+                                user_request=st.session_state.user_request,
+                                df_for_prompt=df,
+                                model=model,
+                            )
+                            st.session_state.feedback = "" # Clear previous feedback
+                        except Exception as e:
+                            st.error(str(e))
+                            st.session_state.generated_code = None
+
+        with col_clear:
+            if st.button("Clear", use_container_width=True):
+                keys_to_clear = ['generated_code', 'feedback', 'user_request', 'last_selected_df']
+                for key in keys_to_clear:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
+
         # This block runs if code has been generated
         if 'generated_code' in st.session_state and st.session_state.generated_code:
             try:
-                st.code(st.session_state.generated_code)
+                # Toggle button for showing/hiding code
+                if st.button("Show/Hide Generated Code"):
+                    st.session_state.show_code = not st.session_state.get('show_code', False)
+                
+                # Show code if toggle is enabled
+                if st.session_state.get('show_code', False):
+                    st.code(st.session_state.generated_code, language='python')
+                
                 code_to_execute = st.session_state.generated_code.strip().replace("```python", "").replace("```", "")
                 local_scope = {"df": df, "px": px, "pd": pd}
                 exec(code_to_execute, {}, local_scope)
