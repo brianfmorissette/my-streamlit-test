@@ -6,7 +6,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from data import load_master_dataframes, save_master_dataframes, process_uploaded_file
-from gemini_client import get_visualization_code
+from llm_client import get_visualization_code
 
 load_dotenv()
 
@@ -128,8 +128,9 @@ else:
     models_df_view = st.session_state.models_df
     tools_df_view = st.session_state.tools_df
 
-# Gemini API Configuration
+# API Key Configuration
 gemini_api_key = os.getenv("GEMINI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 
 
@@ -149,6 +150,14 @@ with left_col:
 
 with right_col:
     st.header("Create a Custom Visualization")
+
+    model_provider = st.radio(
+        "Choose a model provider:",
+        ("Gemini", "OpenAI"),
+        horizontal=True,
+        key="model_provider"
+    )
+
     dataframes = {"Users": users_df_view, "Models": models_df_view, "Tools": tools_df_view}
     selected_df_name = st.radio(
         "Choose a dataframe to query:",
@@ -165,20 +174,27 @@ with right_col:
     if st.button("Generate Visualization"):
         if not user_request:
             st.warning("Please enter a request for the visualization.")
-        elif not gemini_api_key:
+        
+        # Check for API keys based on selected provider
+        elif model_provider == "Gemini" and not gemini_api_key:
             st.error("GEMINI_API_KEY not found. Please set it in your .env file.")
+        elif model_provider == "OpenAI" and not openai_api_key:
+            st.error("OPENAI_API_KEY not found. Please set it in your .env file.")
+
         else:
-            with st.spinner("Generating visualization..."):
+            with st.spinner(f"Generating visualization with {model_provider}..."):
                 try:
                     generated_code = get_visualization_code(
                         user_request=user_request,
                         df_for_prompt=df,
-                        api_key=gemini_api_key
+                        model_provider=model_provider,
+                        gemini_api_key=gemini_api_key,
+                        openai_api_key=openai_api_key
                     )
 
                     if generated_code:
-                        st.success("✅ AI Generated the following code:")
-                        st.code(generated_code, language="python")
+                        # st.success("✅ AI Generated the following code:")
+                        # st.code(generated_code, language="python")
                         try:
                             code_to_execute = generated_code.strip().replace("```python", "").replace("```", "")
                             local_scope = {"df": df, "px": px, "pd": pd}
