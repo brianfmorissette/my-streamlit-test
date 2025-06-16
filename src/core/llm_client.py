@@ -1,14 +1,20 @@
 import google.generativeai as genai
 import openai
 import io
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Load API keys from environment variables
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def get_visualization_code(
     user_request, 
     df_for_prompt, 
-    model_provider,
-    gemini_api_key=None, 
-    openai_api_key=None
+    model_provider
 ):
     """
     Calls the selected LLM API to generate Python code for a visualization.
@@ -48,10 +54,10 @@ def get_visualization_code(
 
     # --- API Call Logic ---
     if model_provider == "Gemini":
-        if not gemini_api_key:
-            raise ValueError("Gemini API key is required.")
+        if not GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY not found. Please set it in your .env file.")
         try:
-            genai.configure(api_key=gemini_api_key)
+            genai.configure(api_key=GEMINI_API_KEY)
             model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt)
             return response.text
@@ -59,10 +65,10 @@ def get_visualization_code(
             raise RuntimeError(f"An error occurred while calling the Gemini API: {e}")
 
     elif model_provider == "OpenAI":
-        if not openai_api_key:
-            raise ValueError("OpenAI API key is required.")
+        if not OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY not found. Please set it in your .env file.")
         try:
-            client = openai.OpenAI(api_key=openai_api_key)
+            client = openai.OpenAI(api_key=OPENAI_API_KEY)
             response = client.chat.completions.create(
                 model="gpt-4o", # Or another suitable model
                 messages=[
