@@ -48,7 +48,6 @@ def handle_file_upload():
             st.sidebar.warning(f"A report for the date {report_date.date()} has already been uploaded.")
         else:
             # If it's a new date, process the file
-            st.sidebar.info(f"Processing '{uploaded_file.name}'...")
             df = pd.read_csv(uploaded_file)
             new_users, new_models, new_tools = process_uploaded_file(df, uploaded_file.name)
             
@@ -95,7 +94,6 @@ def show_sidebar():
         key="file_uploader_widget",
         on_change=handle_file_upload
     )
-
     with st.sidebar.expander("Processed Report Dates", expanded=False):
         if not st.session_state.users_df.empty:
             processed_dates = pd.to_datetime(st.session_state.users_df['week_start']).dt.date.unique()
@@ -106,7 +104,7 @@ def show_sidebar():
                 with col1:
                     st.write(date.strftime('%Y-%m-%d'))
                 with col2:
-                    if st.button("🗑️", key=f"delete_{date}"):
+                    if st.button("🗑️", key=f"delete_{date}", help="Delete this report's data"):
                         handle_date_deletion(date)
         else:
             st.write("No reports have been uploaded yet.")

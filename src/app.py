@@ -55,9 +55,8 @@ if start_date and end_date:
             df_view.query("@start_date <= week_start <= @end_date", inplace=True)
 
 # Sort all dataframes by date in descending order before displaying
-users_df_view = users_df_view.sort_values(by='week_start', ascending=False)
-models_df_view = models_df_view.sort_values(by='week_start', ascending=False)
-tools_df_view = tools_df_view.sort_values(by='week_start', ascending=False)
-
+users_df_view = users_df_view.sort_values(by='week_start', ascending=False).reset_index(drop=True)
+models_df_view = models_df_view.sort_values(by='week_start', ascending=False).reset_index(drop=True)
+tools_df_view = tools_df_view.sort_values(by='week_start', ascending=False).reset_index(drop=True)
 # Render the main page content
 show_main_page(users_df_view, models_df_view, tools_df_view)
