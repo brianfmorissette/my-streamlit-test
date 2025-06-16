@@ -14,10 +14,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 def get_visualization_code(
     user_request, 
     df_for_prompt, 
-    model
+    model,
+    previous_code=None,
+    feedback=None
 ):
     """
     Calls the selected LLM API to generate Python code for a visualization.
+    If previous_code and feedback are provided, it asks the model to refine the code.
     """
     # --- Prompt Definition (shared by both models) ---
     with io.StringIO() as buffer:
@@ -25,32 +28,68 @@ def get_visualization_code(
         df_schema = buffer.getvalue()
     df_head = df_for_prompt.head().to_string()
 
-    prompt = f"""
-    You are an expert and meticulous Python data analyst specializing in Plotly Express.
-    Your goal is to generate clean, readable, and accurate Python code for visualizations based on user requests.
-    You are working with a pandas DataFrame in memory named `df`.
+    if previous_code and feedback:
+        # This is a refinement request
+        prompt = f"""
+        You are an expert and meticulous Python data analyst specializing in Plotly Express.
+        A user wants to refine a visualization you previously created.
 
-    Here is the schema of the DataFrame:
-    ```
-    {df_schema}
-    ```
+        The DataFrame `df` has this schema and head:
+        Schema:
+        ```
+        {df_schema}
+        ```
+        Head:
+        ```
+        {df_head}
+        ```
 
-    Here is the head of the DataFrame:
-    ```
-    {df_head}
-    ```
+        Here is the original user request:
+        "{user_request}"
 
-    The user has requested the following visualization:
-    "{user_request}"
+        Here is the Python code you previously generated:
+        ```python
+        {previous_code}
+        ```
 
-    Your task is to generate ONLY the Python code (using Plotly Express) to create the requested visualization.
-    Your response must be a raw string of Python code, without any markdown, code fences (```), or explanations.
-    - The code should be a single block.
-    - The DataFrame is already in memory as `df`. Do not load any data.
-    - The final chart object must be assigned to a variable named `fig`. For example: `fig = px.bar(...)`
-    - `plotly.express` is already imported as `px`. Do not import it again.
-    - Do not include `st.plotly_chart(fig)`. The app will handle rendering.
-    """
+        The user has provided the following feedback for how to change the chart:
+        "{feedback}"
+
+        Your task is to generate ONLY the updated Python code that incorporates the user's feedback.
+        Your response must be a raw string of Python code, without any markdown, code fences (```), or explanations.
+        - The DataFrame is already in memory as `df`. Do not load any data.
+        - The final chart object must be assigned to a variable named `fig`.
+        - `plotly.express` is already imported as `px`. Do not import it again.
+        - Do not include `st.plotly_chart(fig)`. The app will handle rendering.
+        """
+    else:
+        # This is an initial request
+        prompt = f"""
+        You are an expert and meticulous Python data analyst specializing in Plotly Express.
+        Your goal is to generate clean, readable, and accurate Python code for visualizations based on user requests.
+        You are working with a pandas DataFrame in memory named `df`.
+
+        Here is the schema of the DataFrame:
+        ```
+        {df_schema}
+        ```
+
+        Here is the head of the DataFrame:
+        ```
+        {df_head}
+        ```
+
+        The user has requested the following visualization:
+        "{user_request}"
+
+        Your task is to generate ONLY the Python code (using Plotly Express) to create the requested visualization.
+        Your response must be a raw string of Python code, without any markdown, code fences (```), or explanations.
+        - The code should be a single block.
+        - The DataFrame is already in memory as `df`. Do not load any data.
+        - The final chart object must be assigned to a variable named `fig`. For example: `fig = px.bar(...)`
+        - `plotly.express` is already imported as `px`. Do not import it again.
+        - Do not include `st.plotly_chart(fig)`. The app will handle rendering.
+        """
 
     # --- API Call Logic ---
     if model == "Gemini 1.5 Flash":
