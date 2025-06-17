@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 from core.data import load_master_dataframes
 from ui.sidebar import show_sidebar
-from ui.main_page import show_main_page
+from ui.explore_dataframes import show_explore_dataframes
+from ui.plot_agent import show_plot_agent
+from ui.key_metrics import show_key_metrics
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -13,10 +15,6 @@ st.set_page_config(
 
 # --- App Title and Description ---
 st.title("Flagship Pioneering ChatGPT Usage Analytics")
-st.write(
-    "This app creates custom visualizations on the fly. "
-    "Enter a request in plain English, and the AI will generate a Plotly chart."
-)
 st.write("---")
 
 # --- Initialize Session State ---
@@ -58,5 +56,19 @@ if start_date and end_date:
 users_df_view = users_df_view.sort_values(by='week_start', ascending=False).reset_index(drop=True)
 models_df_view = models_df_view.sort_values(by='week_start', ascending=False).reset_index(drop=True)
 tools_df_view = tools_df_view.sort_values(by='week_start', ascending=False).reset_index(drop=True)
-# Render the main page content
-show_main_page(users_df_view, models_df_view, tools_df_view)
+
+# --- Render the main page content using separate components ---
+# Key metrics section (full width at the top)
+show_key_metrics(users_df_view, models_df_view, tools_df_view)
+st.markdown("---")
+
+# Create two-column layout for dataframe exploration and plot agent
+left_col, right_col = st.columns(2)
+
+# Left column: Dataframe exploration
+with left_col:
+    show_explore_dataframes(users_df_view, models_df_view, tools_df_view)
+
+# Right column: Plot agent
+with right_col:
+    show_plot_agent(users_df_view, models_df_view, tools_df_view)
