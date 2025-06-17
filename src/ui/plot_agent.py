@@ -35,7 +35,7 @@ def show_plot_agent(users_df_view, models_df_view, tools_df_view):
     
     # Define example prompts for each dataframe to guide users
     placeholder_prompts = {
-        "Users": "e.g. 'Top 10 most active users', 'GPTs Messaged Usage', 'Users who have created a project",
+        "Users": "e.g. 'Top 10 most active users', 'GPTs Messaged Usage', 'Users who have created a project'",
         "Models": "e.g. 'Stacked bar chart of model usage by week', 'Pie chart of most popular models', 'Trend of o3 usage'", 
         "Tools": "e.g. 'Stacked bar chart of tool usage by week', 'Pie chart of most popular tools', 'Trend of Data Analysis usage'"
     }
