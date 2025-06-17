@@ -109,9 +109,4 @@ def show_sidebar():
         else:
             st.write("No reports have been uploaded yet.")
 
-    
-    
-
-    
-    
     return pm_only, start_date, end_date 
